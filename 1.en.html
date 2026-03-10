@@ -10,89 +10,91 @@
 Translated by Claude Opus 4.6
 <a href="/">home</a> / <a href="1.jp.html">jp</a>
 <pre style="white-space: pre-wrap;">
-===== Summary =====
+===== Overview =====
 - In software development, tests are more valuable than implementation
 	- Stop writing unit tests out of inertia
 	- Consider automating tests as close to E2E as possible
 - SQLite Core, Imperative Shell
 	- Snapshot API responses and necessary data from server-based DBs into SQLite, and have the application reference SQLite
-	- The boundary between unit tests and integration tests becomes very thin
-	- Property-based testing becomes more E2E-oriented and realistic
+	- The boundary between unit tests and integration tests becomes extremely thin
+	- Property-based testing becomes more realistic and closer to E2E
 
 ===== 0. Scope of Discussion =====
-The following discussion is written with business software in mind, which presumably constitutes the majority of software in the world. I believe the fundamental ideas do not differ greatly for software built for software, but I ask for your understanding where inconsistencies may arise.
+The following discussion is concerned with software built for business purposes, which likely constitutes the majority of software in the world. I believe the fundamental ideas do not change much for software built for software's sake, but I ask for understanding where inconsistencies may arise.
 
-Furthermore, I recognize that software with UIs—so-called frontend—falls outside the scope of this discussion. In other words, the target here is what we call the backend. While this may seem quite limited, given the current movement toward shifting more responsibility to the backend, as seen with htmx, it likely covers a substantial area of interest.
+Furthermore, I recognize that software with UIs—so-called frontend—falls outside this scope. In other words, the subject here is what is called backend. While this may seem quite limited, given the current trend of shifting more responsibility to the backend, as seen with htmx, this should still be an area of considerable interest.
 
 ===== 1. The Value of Testing =====
-Software is more a means than an end. In that sense, it is only natural to ask whether the objective has been achieved, and only tests can answer that question. One must note that how something was achieved (architecture, code) does not guarantee what was achieved. Therefore, I believe testing should be the first thing considered.
+Software is more of a means than an end. In that sense, it is only natural to ask whether the objective has been achieved, and only tests can answer that question. It is worth noting that how something was achieved (architecture and code) does not guarantee what was achieved. Therefore, I believe testing should be the first thing considered.
 
-In essence, this is TDD. However, I feel that TDD has been distorted into an implementation-level methodology. What matters is asking whether the objective has been achieved, and on that basis, favoring the most direct method free of extraneous context—meaning the tests we should write are E2E tests. E2E tests can directly express what should be achieved, and as a bonus, in theory they should never break except when requirements change, making them longer-lived than the implementation.
+In essence, this is TDD. However, I feel TDD has been distorted into an implementation-level methodology. What matters is asking whether the objective has been achieved, and on that basis, favoring the most direct method free of extraneous context—in other words, the tests we should write are E2E tests. E2E tests can directly express what should be achieved, and as a bonus, in theory they should never break except when requirements change, making them longer-lived than the implementation.
 
-Unfortunately, E2E tests face harsh barriers: cost, constraints, brittleness, and so on. The progression of compromise toward smaller scopes—integration tests, then unit tests—is the context of the test pyramid. I suspect this ultimately became accepted as the doctrine that thickening the unit test layer is sufficient.
+Unfortunately, E2E tests face harsh barriers: cost, constraints, brittleness, and so on. The progression of compromises toward smaller scopes—integration tests, then unit tests—is the context of the test pyramid. I suspect this ultimately led to the acceptance of a doctrine that simply thickening the unit test layer is sufficient.
 
-I use the term "doctrine" pejoratively because unit tests easily degenerate into tests of implementation. As stated earlier, implementation does not guarantee the achievement of objectives, so one must remain perpetually skeptical of the value of unit tests. When writing unit tests, strategies such as maximizing effectiveness through Functional Core, Imperative Shell should accompany them.
+I use the word "doctrine" critically because unit tests easily degenerate into tests of the implementation. As stated earlier, implementation does not guarantee achievement of objectives—we must remain perpetually skeptical about the value of unit tests. When writing unit tests, strategies such as maximizing effectiveness through Functional Core, Imperative Shell should be employed.
 
-Ultimately, one should maintain the perspective that we are making compromises from E2E testing. Those compromises are reasonable, but how far to compromise must be continuously re-examined.
+Ultimately, we must maintain the perspective that we are compromising on E2E testing. That compromise is valid, but we must continually reassess how far to compromise.
 
-As a digression, let me add a remark on an underexplored effect of testing. Tests serve as instructions for what should be achieved and as guarantees of what has been achieved. I believe that treating this as a contract and leaving the rest to individual discretion is one ideally desirable development style. I feel that entrusting the freedom of detailed design to individual discretion is a form of providing incentives in development—could this not be called truly "inclusive" development? One might enjoy the analogy with Acemoglu's theory, but that is not the main topic, so I will leave it at that.
+As a digression, let me add a remark on an underexplored effect of testing. Tests serve as instructions for what should be achieved and as guarantees of what has been achieved. I believe that treating these as a contract and leaving the rest to individual discretion is one ideal development style. I feel that entrusting the freedom of detailed design to individual discretion is a form of providing incentives in development—could this not be called truly "inclusive" development? Drawing an analogy with Acemoglu's theory is enjoyable, but it is not the main topic, so I will leave it at that.
 
-Additionally, this should serve as a prescription for AI-assisted coding, where review burden is a growing concern. On the non-functional side, most workplaces already achieve adequate or at least acceptable guarantees through security scanning and load testing. Depending on how much one is willing to accept, it should not be impossible to substantially—or in some cases entirely—eliminate the burden of the review process.
+Moreover, this should also serve as a prescription for the review burden that is a growing concern with AI-assisted coding. On the non-functional side, most workplaces can be said to have adequately guaranteed quality through security scans and load testing, or at least compromised acceptably. Depending on one's willingness to draw the line, it should not be impossible to significantly—or even entirely—eliminate the burden of the review process.
 
 ===== 2. SQLite Core, Imperative Shell =====
-I mentioned earlier that E2E is a compromise, but let me revise that slightly. Even if we could solve the problems of E2E testing, there remains one barrier that is nearly insurmountable: execution speed, which stems from the physical constraint of the network. The remedy would be parallel execution, but when attempting to reproduce vast precondition states via property-based testing to increase E2E test coverage, scaling becomes rather impractical.
+There are challenges to running E2E tests that precede technical ones. The data state that serves as a precondition for tests is far more complex than for unit tests, making thorough coverage difficult. This is where the concept of property-based testing becomes useful. However, as mentioned earlier, there is the issue of execution time. In particular, there is one wall that is nearly insurmountable: execution speed constrained by the physical limitation of the network. The remedy would be parallel execution, but scaling to the point where property-based execution becomes feasible is not very realistic.
 
-So, it may also be worthwhile to reverse the thinking and examine how close we can bring fast-executing unit tests to E2E. This is what I propose as "SQLite Core, Imperative Shell." The claim is quite simple: just insert SQLite between the application and the server-based RDB, as follows:
+So, let us reverse the approach and consider how close we can bring fast-executing unit tests to E2E. This is what I propose as "SQLite Core, Imperative Shell." The claim is quite simple: just insert SQLite between the application and the server-based RDB, as follows:
 
 Server-based RDB → SQLite ←→ Application
 
-Snapshot the necessary tables and rows from the server-based RDB into SQLite, and have the application issue queries against SQLite. When snapshotting, if only simple WHERE clauses are permitted between the server-based RDB and SQLite, behavioral differences from the production environment become negligible. In other words, unit tests can be brought closer to the level of integration tests.
+Snapshot the necessary tables and rows from the server-based RDB into SQLite, and have the application issue queries against SQLite. When snapshotting, if only simple WHERE clauses are permitted between the server-based RDB and SQLite, behavioral differences from the production environment become negligible. In other words, unit tests can be elevated closer to the level of integration tests.
 
-The benefits of this approach are not limited to improving test effectiveness. The ability to write filters and aggregations within the application in SQL is also a powerful advantage. Because SQL is relationally complete, it can handle most use cases adequately. The role of code becomes primarily that of glue—control flow, value transformations not supported by SQL, and other fairly limited tasks. Moreover, there will likely be cases where delegating to SQLite's years of optimization yields better performance than writing code by hand.
+The benefits of this approach are not limited to enhancing test effectiveness. The ability to write filters and aggregations within the application in SQL is also a powerful effect. Because SQL is relationally complete, it can handle most use cases adequately. The role of code becomes primarily that of glue—control flow and processing values not supported by SQL, which is quite limited in scope. Additionally, there will be many cases where deferring to SQLite's years of optimization yields better performance than writing code by hand.
 
-As mentioned, thanks to its mathematical foundation and long track record of adoption, SQL is an extremely stable data access interface. SQLite in particular has guaranteed support through 2050, ensuring that the core of your logic becomes very robust. Even as the surrounding environment evolves rapidly, if the core remains guaranteed, keeping up with updates should become considerably easier.
+As mentioned, thanks to its mathematical foundation and long track record of adoption, SQL is an extremely stable data access interface. SQLite in particular has guaranteed support through 2050, ensuring that the core of the logic becomes extremely robust. Even if the surrounding ecosystem evolves rapidly, as long as the core remains guaranteed, keeping up with updates should become considerably easier.
 
 ===== 3. Known Limitations =====
-There is no silver bullet, and this approach has its limitations. Let me state my honest opinions on what I can see at this point.
+There is no silver bullet, and this approach has its limitations too. Let me offer honest opinions on what I can see at this point.
 
 3.1 The Problem of Assuming RDB
-Let me address why I have been deliberately writing "server-based RDB." The world's data sources are not limited to RDBs—there are NoSQL databases, external APIs (JSON), and more. The question of whether to put all that data into SQLite is a fair one.
+Let me address why I have deliberately kept writing "server-based RDB." The world's data sources are not limited to RDBs—there are NoSQL databases and external APIs (JSON) as well. The question of whether to put such data into SQLite is a fair one.
 
-Honestly, if the architecture depends heavily on external APIs, I must admit this approach is largely powerless. In such architectures, the problem essentially becomes one of mocking. If logic is involved, it would be far more sensible to adopt and test with Functional Core, Imperative Shell. Conversely, that is all there is to it—if promotion is not possible, it simply comes back to the original question of where to place the compromise.
+Honestly, I will admit this approach is largely powerless when the architecture depends heavily on external APIs. In such cases, the problem essentially becomes one of mocking. If there is logic to verify, it would be far more sensible to adopt and test with Functional Core, Imperative Shell. Conversely, that is all there is to it—if elevation is not possible, it merely returns to the original question of where to place the compromise.
 
-Regarding the diversity of data sources, I would argue that RDBs suffice for all but the most unusual non-functional requirements. NewSQL now exists, and the write-scaling problem is essentially solved. In the first place, services that actually scale to that degree are exceedingly rare, and the scenarios where one would adopt an alternative DB at the cost of additional management overhead and forgoing transaction support are quite limited.
+Given the current popularity of microservices, it is natural to ask whether the scope is too narrow. I believe there are only two compelling reasons to split into microservices: special requirements or team size. I recognize that services that truly have reason to abandon a monolith are extremely rare, and this line of thinking should reinforce the case for adopting a monolith.
 
-As for diversity in data structure, I perceive the problem as nonexistent. SQLite supports JSON, so it is hard to imagine this becoming a fatal issue. Furthermore, one should note that the reality of schemaless is merely lazy evaluation of schemas. Data whose schema truly cannot be defined in advance is difficult to use programmatically in the first place, and being quite exceptional, it is unavoidable that individual handling is required.
+Regarding the diversity of data sources, I would argue that RDB suffices unless there are very special non-functional requirements. NewSQL now exists, and the write-scaling problem is largely solved. In the first place, services that scale to that extent barely exist, and situations where one would choose another DB at the cost of additional management overhead or forgoing transaction support are quite limited.
 
-3.2 The Write Problem
-In the methodology described above, I deliberately avoided addressing writes. I discussed Arrange and Act but must admit I did not address the target of Assert.
+As for diversity in data structure, I believe the problem itself does not exist. SQLite supports JSON, so it is hard to imagine a fatal issue. Moreover, the reality of schemaless is merely lazy evaluation of schemas. Data whose schema truly cannot be defined in advance is difficult to use programmatically in the first place, and since it constitutes quite special data, requiring individual handling is unavoidable.
 
-For example, if the target of Assert is an API server response (JSON, etc.), there is no problem at all. However, when the target is the state of data in the DB, a problem arises: should we look at SQLite's data or the server-based RDB's data?
+3.2 The Problem of Writes
+In the methodology above, I have intentionally not touched on writes. I must admit that while Arrange and Act have been discussed, the subject of Assert has not been addressed.
 
-Naturally, the correct answer is to check the server-based RDB. Under the assumption that INSERT and UPDATE behavior does not differ significantly across databases, one possible compromise is to place target tables for writes within SQLite and then reflect the written data back to the server-based RDB.
+For example, if the subject of Assert is an API server response (JSON, etc.), there is no problem. But when it concerns the state of data in the DB, a problem arises: should we look at SQLite's data, or should we look at the server-based RDB's data?
 
-Even so, guarantees regarding whether INSERT/UPDATE behavior matches that of the server-based RDB, as well as handling of conflicts, will be insufficient. I must admit that the value as unit tests inevitably diminishes, and in that sense, claiming to have reached integration test level was a somewhat dishonest assertion. This is the greatest structural deficiency. Nevertheless, even if one uses a real DB only for writes or simply accepts the limitation, the approach remains highly effective.
+Naturally, the correct answer is to check the server-based RDB. Under the assumption that INSERT and UPDATE behavior does not differ significantly across databases, one possible compromise is to place write-target tables within SQLite and then reflect the written data back to the server-based RDB.
+
+Even so, guarantees regarding whether the behavior matches the server-based RDB's INSERT/UPDATE behavior, as well as handling of conflicts, will remain inadequate. I must admit that the value as unit tests inevitably diminishes, and in that sense, claiming to have reached the integration test level was also disingenuous. This is the greatest structural flaw. Nevertheless, even if one uses the actual DB only for writes or simply accepts the limitation, the approach remains more than effective enough.
 
 3.3 Still Not Reaching E2E
-I advocated valuing E2E, but the proposed method only achieves limited promotion of unit tests. One might consider an approach that replaces the server-based RDB with SQLite for speed gains, but that is simply mocking. It lowers test value while introducing problems with dialect absorption and behavioral differences. This is an unavoidable point of compromise. Ultimately, E2E testing remains essential. That said, integration-level tests have relatively high capacity to express requirements, and if that layer is thick enough, it is also a fact that it can be sufficiently effective.
+I advocated for the importance of E2E, but the proposed method only provides limited elevation of unit tests. One might consider replacing the server-based RDB with SQLite for speed, but that is merely mocking. It degrades test value and introduces problems with dialect absorption and behavioral differences. This is an unavoidable compromise. Ultimately, E2E tests remain essential. That said, integration-test-level tests have a relatively high ability to express requirements, so having a thick layer of them is indeed effective.
 
 3.4 Immaturity of the Testing Ecosystem
-I called for property-based testing for coverage. While the ecosystem for property-based testing of functions is mature, it is admittedly immature for SQL. Unfortunately, this will require either waiting for the ecosystem to mature or building it yourself.
+I spoke of property-based testing for coverage. While the property-based testing ecosystem for functions is mature, it is true that it remains immature for SQL. Unfortunately, this will require either waiting for the ecosystem to mature or building it yourself.
 
-Let me offer some casual thoughts on building a property-based testing foundation. Even when doing property-based testing at the integration test level, the unit for creating data is likely not individual tables but somewhat larger units (such as members/users). For creating data consistently across multiple tables, the Factory pattern is a reasonable candidate. I believe it would be worthwhile to look to FactoryBot, which has already achieved remarkable results in this area.
+Let me indulge in some casual thoughts on building a property-based testing foundation. Even when doing property-based testing at the integration test level, the unit at which you want to create data is likely not individual tables but somewhat larger units (such as a member). For creating data with consistency across multiple tables, the Factory pattern is a strong candidate. I believe it would be worthwhile to draw on FactoryBot, which has already achieved remarkable results in this domain.
 
-In my view, the concept of understanding domains and mapping them to code, popularized by DDD and others, is an achievement of object-oriented programming. However, the methodology has bloated into something bewilderingly complex, and it is hard to deny that it has become a burden on development. Ultimately, there seems to be a gap when it comes to mapping concepts to functionality, but the mapping should be much closer when it comes to data. Lately, I have been fantasizing that perhaps this was something that should have grown within the context of testing.
+In my view, the concept of understanding the domain and mapping it to code, popularized by DDD among others, is an achievement of object-oriented programming. However, I think it is hard to deny that the methodology has ballooned into something bewilderingly complex, becoming a burden on development. Ultimately, there seems to be a gap when it comes to mapping concepts to functionality—but the gap should be much smaller when it comes to data. I have recently been entertaining the fantasy that perhaps this was something that should have grown within the context of testing.
 
-===== 4. Conclusion =====
-In Section 1, I discussed the importance of tests that are close to E2E. In Section 2, I discussed techniques for bringing unit tests closer to E2E using SQLite, and in Section 3, I also pointed out the limitations of this approach.
+===== 4. Summary =====
+In Section 1, I discussed the importance of testing as close to E2E as possible. In Section 2, I described the approach of using SQLite to bring unit tests closer to E2E, and in Section 3, I pointed out its limitations.
 
-I have proposed a methodology called "SQLite Core, Imperative Shell." I think it is an interesting idea worth considering—I can only hope it is not a reinvention of the wheel. As the name suggests, Functional Core, Imperative Shell and SQLite are the major inspirations behind this concept. I would like to express my gratitude to their respective creators, Gary Bernhardt and Dr. Richard Hipp.
+I have proposed a methodology called "SQLite Core, Imperative Shell." I believe it is an interesting idea worth considering—I can only hope it is not a reinvention of the wheel. As the name suggests, Functional Core, Imperative Shell and SQLite are the major sources of inspiration. I would like to express my gratitude to their respective creators, Gary Bernhardt and Dr. Richard Hipp.
 
-That said, personally, more than promoting a methodology, I would rather broaden the inquiry into the value of testing. The reason I began writing this article is that I recently encountered the opinion that "template generation is an area where AI excels, so it should also write test code." Whether to have AI write tests is a matter of individual judgment, but I believe that testing, as discussed above, cannot possibly be a tedious task of filling in templates.
+That said, personally, rather than pushing a methodology, I would rather expand the inquiry into the value of testing. The reason I began writing this article is that I recently encountered the opinion that "template generation is an area where AI excels, so test code should also be written by AI." Whether to have AI write tests is a matter of individual judgment, but I believe that testing, as discussed throughout this article, cannot possibly be a tedious task of filling in templates.
 
-Therefore, I would first like to reiterate that generating unit tests out of inertia—which is likely the cause of viewing tests as templates—produces no value. As I have tried to show both explicitly and implicitly, testing, despite its importance, is a largely untapped vein with considerable potential for creative work, and I wish to assert this once more.
+For that reason, I would like to reiterate that unit tests—likely the cause of viewing testing as template work—have no value when generated out of inertia. As I hope I have shown both explicitly and implicitly, testing, despite its importance, is a largely unexplored vein with considerable potential for creative work.
 
-I would be delighted if this serves as an occasion for my esteemed readers to explore the possibilities of testing once again.
+I would be delighted if this serves as an opportunity for readers to once again explore the possibilities of testing.
 </pre>
 </body>
 </html>

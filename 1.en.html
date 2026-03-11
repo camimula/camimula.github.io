@@ -55,7 +55,7 @@ As mentioned, thanks to its mathematical foundation and long track record of ado
 ===== 3. Known Limitations =====
 There is no silver bullet, and this approach has its limitations too. Let me offer honest opinions on what I can see at this point.
 
-3.1 The Problem of Assuming RDB
+3.1. The Problem of Assuming RDB
 Let me address why I have deliberately kept writing "server-based RDB." The world's data sources are not limited to RDBs—there are NoSQL databases and external APIs (JSON) as well. The question of whether to put such data into SQLite is a fair one.
 
 Honestly, I will admit this approach is largely powerless when the architecture depends heavily on external APIs. In such cases, the problem essentially becomes one of mocking. If there is logic to verify, it would be far more sensible to adopt and test with Functional Core, Imperative Shell. Conversely, that is all there is to it—if elevation is not possible, it merely returns to the original question of where to place the compromise.
@@ -66,7 +66,7 @@ Regarding the diversity of data sources, I would argue that RDB suffices unless 
 
 As for diversity in data structure, I believe the problem itself does not exist. SQLite supports JSON, so it is hard to imagine a fatal issue. Moreover, the reality of schemaless is merely lazy evaluation of schemas. Data whose schema truly cannot be defined in advance is difficult to use programmatically in the first place, and since it constitutes quite special data, requiring individual handling is unavoidable.
 
-3.2 The Problem of Writes
+3.2. The Problem of Writes
 In the methodology above, I have intentionally not touched on writes. I must admit that while Arrange and Act have been discussed, the subject of Assert has not been addressed.
 
 For example, if the subject of Assert is an API server response (JSON, etc.), there is no problem. But when it concerns the state of data in the DB, a problem arises: should we look at SQLite's data, or should we look at the server-based RDB's data?
@@ -75,15 +75,20 @@ Naturally, the correct answer is to check the server-based RDB. Under the assump
 
 Even so, guarantees regarding whether the behavior matches the server-based RDB's INSERT/UPDATE behavior, as well as handling of conflicts, will remain inadequate. I must admit that the value as unit tests inevitably diminishes, and in that sense, claiming to have reached the integration test level was also disingenuous. This is the greatest structural flaw. Nevertheless, even if one uses the actual DB only for writes or simply accepts the limitation, the approach remains more than effective enough.
 
-3.3 Still Not Reaching E2E
+3.3. Still Not Reaching E2E
 I advocated for the importance of E2E, but the proposed method only provides limited elevation of unit tests. One might consider replacing the server-based RDB with SQLite for speed, but that is merely mocking. It degrades test value and introduces problems with dialect absorption and behavioral differences. This is an unavoidable compromise. Ultimately, E2E tests remain essential. That said, integration-test-level tests have a relatively high ability to express requirements, so having a thick layer of them is indeed effective.
 
-3.4 Immaturity of the Testing Ecosystem
+3.4. Immaturity of the Testing Ecosystem
 I spoke of property-based testing for coverage. While the property-based testing ecosystem for functions is mature, it is true that it remains immature for SQL. Unfortunately, this will require either waiting for the ecosystem to mature or building it yourself.
 
 Let me indulge in some casual thoughts on building a property-based testing foundation. Even when doing property-based testing at the integration test level, the unit at which you want to create data is likely not individual tables but somewhat larger units (such as a member). For creating data with consistency across multiple tables, the Factory pattern is a strong candidate. I believe it would be worthwhile to draw on FactoryBot, which has already achieved remarkable results in this domain.
 
 In my view, the concept of understanding the domain and mapping it to code, popularized by DDD among others, is an achievement of object-oriented programming. However, I think it is hard to deny that the methodology has ballooned into something bewilderingly complex, becoming a burden on development. Ultimately, there seems to be a gap when it comes to mapping concepts to functionality—but the gap should be much smaller when it comes to data. I have recently been entertaining the fantasy that perhaps this was something that should have grown within the context of testing.
+
+3.5. Excessive Expectations of Human Intellect
+I have been advocating for property-based testing, but compared to conventional scenario-level tests, the design difficulty is far higher. If someone pointed out that I am pushing the problem onto human intellect, I could not deny it. This is a qualitative flaw.
+
+How far E2E-level property-based testing can be accepted by each team, and what kinds of projects it is feasible for, will require trial and error.
 
 ===== 4. Summary =====
 In Section 1, I discussed the importance of testing as close to E2E as possible. In Section 2, I described the approach of using SQLite to bring unit tests closer to E2E, and in Section 3, I pointed out its limitations.

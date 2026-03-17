@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>[EN] Stalinist Design</title>
+</head>
+<body>
+<h1>[EN] Stalinist Design</h1>
+Translated by Claude Opus 4.6
+<a href="/">home</a> / <a href="4.jp.html">jp</a>
+<pre style="white-space: pre-wrap;">
+I was reminded of Full Metal Jacket while being called in for incident response.
+
+Every system that calls you out has an ordinary design! Every system that doesn't call you out is a well-trained ordinary design! Development really is hell!
+
+A good system is one that never calls you out. Not being called out means your phone doesn't ring on holidays, and even during normal hours, no support tasks arise where people ask you about the system. The latter is not very realistic, but let us consider it.
+
+===== 1. Minimizing Failures =====
+Failures will inevitably occur. The machines that run software are physical devices in the real world, subject to unexpected breakdowns. Of course, in most cases it is the software that is suspect... but the point is that things will break as a matter of principle. Since failures are inevitable, we should consider how to minimize their impact. From that perspective, what matters first is the impact, and then the probability.
+
+The worst impact is data inconsistency. In financial systems where inconsistency is fatal, this goes without saying, but even in other cases, enormous explanation costs arise. In that sense, one should assume that no case tolerates inconsistency. Transaction support is a fundamental human right. However, that alone is not sufficient.
+
+For example, suppose you expect time-series data or state transitions in your data. Within your own processing this is fine, but when data comes from external sources, missing time-series entries, abnormal state transitions, or untriggered transitions frequently occur. From this point, an express train to hell departs. A failure occurs, its impact propagates to downstream processes, business operations are delayed, customer support is overwhelmed with complaints, the PM develops stomach ulcers, engineers are held hostage...
+
+I would like to propose as a fundamental principle of system design: eliminate trust from the design thoroughly.
+
+You must not trust data. There might be gaps or inconsistencies, it might be modified externally, unexpected values might appear... And it is not just data. External services might fail, contracts might be renewed, unexpected behavior might occur, a library maintainer might suddenly delete it... The original intent behind adoption might not be maintained in the future...
+
+Be thoroughly suspicious—line up reasons not to adopt rather than reasons to adopt. Adoption should be permitted only when the problem has been truly confirmed. For the sake of your peace of mind, hold suspicion and purge anything dubious from the system—this is what I call Stalinist Design.
+
+As an example, let us consider microservices, which enjoyed a period of popularity. Won't inter-service I/O increase failure points? Isn't it possible that cross-service transactions will be required in the future? Can the network topology be managed? Won't load concentration occur? Even the Linux kernel is a monolith—can the case for splitting really be made? Is deployment isolation truly impossible with a monolith?...
+
+As another example, let us also consider Redis, which remains enormously popular. Even if the goal is to offload RDB load, how long can you maintain consistency between the two? It is said to be fast, but isn't an RDB on SSD also fast enough? How do you deal with volatility? Should features like Pub/Sub really be entrusted to Redis?...
+
+What you arrive at after all these purges is a monolith-plus-RDB, a thoroughly proven composition. The motivation to change such a proven composition would require quite special conditions. Will the moment ever truly come when you can say it is unavoidable, having weathered all this suspicion?
+
+===== 2. Automatic Recovery =====
+No matter how hard you try, the system will eventually break, so recovery procedures are necessary. Here too, suspicion should be put to full use. Fancy Runbooks are petit-bourgeois decadence to be spat upon—rather than paying the management cost for such things, procedures should be narrowed to one and kept straightforward. Ideally, it fixes itself upon restart.
+
+In other words, guarantee idempotency. One might think this goes without saying, but I am surprised how often it is not done. As a basic implementation approach, from the standpoint of data reliability, create append-only log tables, process all records via event sourcing, and update results by full replacement. If you rerun it, it naively reprocesses everything from scratch—that is sufficient. No tricks are needed; in fact, they are risks to be avoided.
+
+Before worrying about whether rerunning fixes things, you should doubt whether rerunning is even possible. If dependent resources must be healthy, you should consider purging those dependencies as well. The more critical the processing, the stricter this requirement becomes.
+
+Automatic recovery has its limits—deployment should also be easy in preparation for emergency response. Recently, containerization is worth considering, but massive dependency trees become candidates for purging. A single binary may well suffice. As for deployment itself, the classical method of completing it with a single scp is desirable, though in cloud environments it may be more realistic to use the byzantine deployment services provided. In any case, hold suspicion and consider purging.
+
+===== 3. Monitoring =====
+Monitoring is a civic duty. To detect signs of rebellion, load should be monitored. The system's rebellions must be reported.
+
+There is no need to consider elaborate monitoring. Especially if you are using cloud services, the default monitoring mechanisms should suffice. However, the reporting built on top of monitoring must be designed with care. Even if the DB's CPU is at 100%, if there is no impact, you are simply utilizing the system to its fullest—no cause for concern. Neither failing to report nor reporting too much is acceptable—both are dereliction of duty and grounds for purging. Scrutinize the software's purpose and keep reporting to the bare minimum.
+
+For failure detection as well, simple measures are sufficient. Enough information to identify that a failure occurred and its cause... If it is resource-related, monitoring is sufficient. In other cases, being able to check the stack trace should be enough. If suspicion was lacking and microservices were adopted, you will squander working hours wrestling with distributed tracing—such rebellious attitudes should be avoided.
+
+===== 4. Counterarguments =====
+The author understands that the arguments so far are not perfect. Let me address foreseeable objections and offer my opinions. The first thing to answer is the infinite regress of suspicion.
+
+If you doubt everything, you will end up doubting the very raison d'être of the system. That is a valid doubt in itself, but building nothing and losing your job defeats the purpose. In practice, doubting features rarely changes anything, so it is more constructive to doubt whether what you build will invite unnecessary trouble.
+
+What matters is how simple things can become. This is also known as the KISS principle, but it is a slogan that fails to answer the terrifyingly complex question of what constitutes simplicity, making it rather useless. The core of suspicion lies in the active pursuit of simplicity. Asking whether you are addressing a problem that actually exists right now, and whether the additional cost can be sufficiently justified—this has proven effective in my experience.
+
+As an example, let me mention the perennial concern of performance. Cases of scaling failures causing lost opportunities, such as PETS.com, are well known, but there is no need to fear—the problem usually does not exist. Modern RDBs are fast enough that vertical scaling alone can handle considerable load. Services that reach such limits barely exist domestically, and even if you are fortunate enough to reach that point, there should be enough time to address it. In the first place, with NewSQL maturing, scaling may simply be a matter of cost. Unless there are very special latency requirements, it can be safely ignored.
+
+===== 4.1. Suspicion Toward the Proven Composition =====
+The RDB becomes a single point of failure, RDB scaling has limits, can development velocity be maintained with a monolith... and so on—the usual concerns are raised.
+
+Regarding doubts about RDBs, as stated earlier, I believe the scaling problem does not exist. If the system is mission-critical, my first answer would be to consider mainframes or NewSQL. That said, traditional RDBs do have their limits—OLAP processing, for example. NewSQL is attempting to tackle this with HTAP and the like, but at this point one can only say that the cobbler should stick to his last. Convergence will require a bit more time.
+
+Regarding development velocity, the answer is that it is an organizational problem, not a technical one. The efficiency discussed in the context of microservices is, as I understand it, a matter of diminishing-returns improvement. In that sense, what is sought is the maintenance of team independence, and if that independence is dragged along by Conway's Law, no improvement can be expected. In principle, splitting a system is merely a matter of interface contracts, so if development velocity can be maintained with microservices, there is no reason it cannot be maintained with a monolith.
+
+===== 4.2. Limits of Event Sourcing =====
+Log data will continue to grow. In the short term it may be manageable, but in the long term, full replay will inevitably become impractical.
+
+For this challenge, holding snapshots at some point is a realistic compromise. With snapshots, the bigger issue is reaching consensus on the period after which data can be treated as finalized, rather than any technical challenge. Even so, it is extremely rare for data to remain unfinalized so long that replay becomes impossible—in most cases, there is ample room to work with. Technically, snapshot consistency can be guaranteed by transactions. Archiving past data for a while, out of abundant suspicion, is also a good practice.
+
+===== 5. Summary =====
+In response to the ambiguity of the KISS principle, I have put forward what I call Stalinist Design, laying out somewhat more concrete questions and examples of application.
+
+The question of whether the introduction of a given system is truly necessary—a skepticism toward the self-production of complexity... adopting microservices, containerizing, introducing Kubernetes to manage them, layering OpenShift on top of that...—is an essential attitude in industry. Rather than letting the glamorous topics of conferences ruin your holidays, you should have the courage to be called legacy.
+
+I mocked it as self-production of complexity, but each individual technology is born from some awareness of a problem—it is inherently morally neutral. However, whether you share the problem awareness of the originator is an entirely separate matter. What is important is the self-restraint not to incorporate something until the problem has been confirmed, and the vigilance toward the long-term costs that incorporation entails.
+
+The desire to tackle challenges with a cool architecture is understandable, but in most cases the challenge does not exist, and the complexity brought in only becomes a source of stomach pain. Trust the little mustache in your heart—no one will be massacred.
+</pre>
+</body>
+</html>

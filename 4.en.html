@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>[EN] Stalinist Design</title>
+  <title>[EN] A Good System Is One That Never Calls You Out</title>
 </head>
 <body>
-<h1>[EN] Stalinist Design</h1>
+<h1>[EN] A Good System Is One That Never Calls You Out</h1>
 Translated by Claude Opus 4.6
 <a href="/">home</a> / <a href="4.jp.html">jp</a>
 <pre style="white-space: pre-wrap;">
@@ -14,7 +14,7 @@ I was reminded of Full Metal Jacket while being called in for incident response.
 
 Every system that calls you out has an ordinary design! Every system that doesn't call you out is a well-trained ordinary design! Development really is hell!
 
-A good system is one that never calls you out. Not being called out means your phone doesn't ring on holidays, and even during normal hours, no support tasks arise where people ask you about the system. The latter is not very realistic, but let us consider it.
+A good system is one that never calls you out. Not being called out means your phone doesn't ring on holidays, and even during normal hours, no support tasks arise where people ask you about the system. The latter is not very realistic, but let us consider it anyway.
 
 ===== 1. Minimizing Failures =====
 Failures will inevitably occur. The machines that run software are physical devices in the real world, subject to unexpected breakdowns. Of course, in most cases it is the software that is suspect... but the point is that things will break as a matter of principle. Since failures are inevitable, we should consider how to minimize their impact. From that perspective, what matters first is the impact, and then the probability.
@@ -27,7 +27,7 @@ I would like to propose as a fundamental principle of system design: eliminate t
 
 You must not trust data. There might be gaps or inconsistencies, it might be modified externally, unexpected values might appear... And it is not just data. External services might fail, contracts might be renewed, unexpected behavior might occur, a library maintainer might suddenly delete it... The original intent behind adoption might not be maintained in the future...
 
-Be thoroughly suspicious—line up reasons not to adopt rather than reasons to adopt. Adoption should be permitted only when the problem has been truly confirmed. For the sake of your peace of mind, hold suspicion and purge anything dubious from the system—this is what I call Stalinist Design.
+Be thoroughly suspicious—line up reasons not to adopt rather than reasons to adopt. Adoption should be permitted only when the problem has been truly confirmed. For the sake of your peace of mind, hold suspicion and purge anything dubious from the system—Stalinism in design.
 
 As an example, let us consider microservices, which enjoyed a period of popularity. Won't inter-service I/O increase failure points? Isn't it possible that cross-service transactions will be required in the future? Can the network topology be managed? Won't load concentration occur? Even the Linux kernel is a monolith—can the case for splitting really be made? Is deployment isolation truly impossible with a monolith?...
 
@@ -73,13 +73,13 @@ Log data will continue to grow. In the short term it may be manageable, but in t
 For this challenge, holding snapshots at some point is a realistic compromise. With snapshots, the bigger issue is reaching consensus on the period after which data can be treated as finalized, rather than any technical challenge. Even so, it is extremely rare for data to remain unfinalized so long that replay becomes impossible—in most cases, there is ample room to work with. Technically, snapshot consistency can be guaranteed by transactions. Archiving past data for a while, out of abundant suspicion, is also a good practice.
 
 ===== 5. Summary =====
-In response to the ambiguity of the KISS principle, I have put forward what I call Stalinist Design, laying out somewhat more concrete questions and examples of application.
+In response to the ambiguity of the KISS principle, I have put forward what I call Stalinism, laying out somewhat more concrete questions and examples of application. Pushing suspicion and purges too far leads to isolation—a truly Stalinist attitude indeed.
 
-The question of whether the introduction of a given system is truly necessary—a skepticism toward the self-production of complexity... adopting microservices, containerizing, introducing Kubernetes to manage them, layering OpenShift on top of that...—is an essential attitude in industry. Rather than letting the glamorous topics of conferences ruin your holidays, you should have the courage to be called legacy.
+Still, the question of whether the introduction of a given system is truly necessary—a skepticism toward the self-production of complexity... adopting microservices, containerizing, introducing Kubernetes to manage them, layering OpenShift on top of that...—is an essential attitude in industry. Rather than letting the glamorous topics of conferences ruin your holidays, you should have the courage to be called legacy.
 
 I mocked it as self-production of complexity, but each individual technology is born from some awareness of a problem—it is inherently morally neutral. However, whether you share the problem awareness of the originator is an entirely separate matter. What is important is the self-restraint not to incorporate something until the problem has been confirmed, and the vigilance toward the long-term costs that incorporation entails.
 
-The desire to tackle challenges with a cool architecture is understandable, but in most cases the challenge does not exist, and the complexity brought in only becomes a source of stomach pain. Trust the little mustache in your heart—no one will be massacred.
+The desire to tackle challenges with a cool architecture is understandable, but in most cases the challenge does not exist, and the complexity brought in only becomes a source of stomach pain. When in doubt, ask the little mustache in your heart—no one will be massacred.
 </pre>
 </body>
 </html>
